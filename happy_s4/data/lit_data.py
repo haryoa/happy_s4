@@ -10,6 +10,7 @@ from happy_s4.data.data import WordTokenizer, shape_dataset
 from happy_s4.data.collators import BatchCollators
 
 
+@dataclass
 class HFLitDataArgs:
     min_freq: int
     split_pattern: str = r"\s+"
