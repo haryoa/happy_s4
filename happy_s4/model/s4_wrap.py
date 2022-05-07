@@ -3,8 +3,9 @@ from torch.nn import Embedding
 import torch.nn.functional as F
 from happy_s4.model.s4 import S4
 from dataclasses import dataclass
-from torch.nn import ModuleList
+from torch.nn import ModuleList, Linear
 import torch
+
 
 
 @dataclass
@@ -73,9 +74,11 @@ class S4_GO_BRR_Classification(Module):
     def __init__(self, args: S4_GO_BRR_ARGS):
         super().__init__()
         self.backbone = S4_GO_BRR(args)
+        self.out_linear = Linear(args.d_model, args.num_labels)
         self.args = args
 
     def forward(self, input_ids, attention_masks, labels=None):
         s4_out = self.backbone(input_ids, attention_masks)
-        loss = F.cross_entropy(s4_out, labels)
+        logits = self.out_linear(s4_out)
+        loss = F.cross_entropy(logits, labels)
         return loss, s4_out

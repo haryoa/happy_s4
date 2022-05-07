@@ -1,5 +1,7 @@
 from re import X
 from pytorch_lightning import LightningModule
+
+from happy_s4.model.lstm_wrap import LSTM_GO_BRR_Classification
 from .s4_wrap import S4_GO_BRR_ARGS, S4_GO_BRR_Classification
 from typing import List, Optional, Dict, Any, Union, Tuple
 from torch.optim import Adam, AdamW
@@ -56,7 +58,9 @@ class LitS4(LightningModule):
     def _init_model(self) -> None:
         if self.config.model_type == "s4-clf":
             self.model = S4_GO_BRR_Classification(self.config.model_args)
-
+        if self.config.model_type == "lstm-clf":
+            self.model = LSTM_GO_BRR_Classification(self.config.model_args)
+    
     def configure_optimizers(self) -> Any:
         """
         Prepare optimizer and schedule (linear warmup and decay)
