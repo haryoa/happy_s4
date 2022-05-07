@@ -12,7 +12,7 @@ from happy_s4.data.collators import BatchCollators
 
 @dataclass
 class HFLitDataArgs:
-    min_freq: int
+    min_freq: int = 1
     split_pattern: str = r"\s+"
     data_name: str = "glue"
     data_subset: str = "mrpc"
@@ -21,6 +21,7 @@ class HFLitDataArgs:
     data_split_test: str = "test"
     batch_size: int = 32
     column_train: Optional[List[str]] = None
+    column_label: str = "label"
 
 
 class HFLitDataModule(LightningDataModule):
@@ -47,24 +48,32 @@ class HFLitDataModule(LightningDataModule):
                 split=self.args.data_split_train,
             )
             self.tokenizer = WordTokenizer(
-                lowercase=True, special_tokens=["[sep]", "[cls]"]
+                lowercase=True, special_tokens=["[sep]", "[cls]"], 
+                split_pattern=self.args.split_pattern,
+                min_freq=self.args.min_freq
             )
             args_input = [self.data_train[x] for x in self.args.column_train]
             self.tokenizer.fit(*args_input)
             older_column = self.data_train.column_names
-            older_column.pop("label")
+            older_column.remove(self.args.column_label)
             self.data_train = self.data_train.map(
-                partial(shape_dataset, word_tokenizer=self.tokenizer)
+                partial(shape_dataset, word_tokenizer=self.tokenizer, 
+                        text_cols=self.args.column_train, 
+                        label_col=self.args.column_label)
             )
             self.data_train = self.data_train.remove_columns(older_column)
 
             self.data_val = datasets.load_dataset(
                 self.args.data_name,
                 name=self.args.data_subset,
-                split=self.args.data_split_train,
+                split=self.args.data_split_val,
             )
             self.data_val = self.data_val.map(
-                partial(shape_dataset, word_tokenizer=self.tokenizer)
+                partial(shape_dataset, 
+                        word_tokenizer=self.tokenizer,
+                        text_cols=self.args.column_train, 
+                        label_col=self.args.column_label
+                       )
             )
             self.data_val = self.data_val.remove_columns(older_column)
 

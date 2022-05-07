@@ -953,6 +953,7 @@ class HippoSSKernel(nn.Module):
 
         w, p, B, _ = nplr(measure, self.N, rank, dtype=dtype)
         C = torch.randn(channels, self.H, self.N // 2, dtype=cdtype)
+        print(trainable)
         self.kernel = SSKernelNPLR(
             L, w, p, B, C,
             log_dt,

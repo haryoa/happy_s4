@@ -28,12 +28,16 @@ class BatchCollators:
         return padded_input_ids
 
     def __call__(self, inp):
-        input_ids, labels = [], []
+        input_ids, labels, attention_masks = [], [], []
         for i in inp:
             input_ids.append(i["input_ids"])
             labels.append(i["label"])
+            if 'attention_masks' in i:
+                attention_masks.append(i["attention_masks"])
         input_ids = self._pad_self(input_ids)
+        attention_masks = self._pad_self(attention_masks)
         return {
             "input_ids": torch.LongTensor(input_ids),
             "label": torch.LongTensor(labels),
+            "attention_masks": torch.LongTensor(attention_masks)
         }

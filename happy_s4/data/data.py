@@ -150,5 +150,8 @@ def shape_dataset(
     for col in text_cols:
         input_ids += word_tokenizer.tokenize_to_ids(inp_dict[col])
         input_ids += word_tokenizer.tokenize_to_ids("[SEP]")
-    returned_dict = dict(label=inp_dict[label_col], input_ids=input_ids)
+        
+    # Attention masks for length / masking (if using self-attention)
+    attention_masks = [1] * len(input_ids)
+    returned_dict = dict(label=inp_dict[label_col], input_ids=input_ids, attention_masks=attention_masks)
     return returned_dict

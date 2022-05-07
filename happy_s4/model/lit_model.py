@@ -9,12 +9,13 @@ from dataclasses import dataclass
 @dataclass
 class LitS4Args:
 
-    s4_args: S4_GO_BRR_ARGS
+    model_args: S4_GO_BRR_ARGS
     learning_rate: float = 1e-3
     optimizer_type: str = "adamw"
     optimizer_beta: Tuple[float, float] = (0.9, 0.999)
     weight_decay: float = 0.0001
     optimizer_epsilon: float = 1e-8
+    model_type: str = "s4-clf"
 
 
 class LitS4(LightningModule):
@@ -32,13 +33,12 @@ class LitS4(LightningModule):
         return self.model(**input_to_s4)
 
     def training_step(self, batch, batch_idx):  # type: ignore  # pylint disable=all
-        outputs = self(batch["input_ids"], batch["label"])
+        outputs = self(input_ids=batch["input_ids"], labels=batch["label"], attention_masks=batch['attention_masks'])
         loss = outputs[0]
         return loss
 
     def validation_step(self, batch, batch_idx):  # type: ignore  # pylint disable=all
-
-        outputs = self(**batch)
+        outputs = self(input_ids=batch["input_ids"], labels=batch["label"], attention_masks=batch['attention_masks'])
         val_loss, logits = outputs[:2]
 
         self.log("val_loss", val_loss)
@@ -55,7 +55,7 @@ class LitS4(LightningModule):
 
     def _init_model(self) -> None:
         if self.config.model_type == "s4-clf":
-            self.model = S4_GO_BRR_Classification(self.config.s4_args)
+            self.model = S4_GO_BRR_Classification(self.config.model_args)
 
     def configure_optimizers(self) -> Any:
         """
