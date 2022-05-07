@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import pickle
 from typing import Any, Dict, Optional
+import os
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
@@ -72,6 +73,7 @@ class Experiment:
         """
         Run the experiment
         """
+        os.makedirs(self.args.out_dir, exist_ok=True)
         batch_args = BatchArgs(**self.args.batch_args)
         batch_size = int(
             batch_args.total_batch_size
@@ -94,9 +96,9 @@ class Experiment:
         # save tokenizer
         with open(Path(self.args.out_dir) / "tokenizer.pkl", "wb") as file:
             pickle.dump(dm.tokenizer, file)
-
+        lit_model_args = {} if self.args.lit_model_args is None else self.args.lit_model_args
         lit_s4_args = LitS4Args(
-            model_args=s4_args, **self.args.get("lit_model_args", {})
+            model_args=s4_args, **lit_model_args
         )
         lit_s4 = LitS4(lit_s4_args)
         es = EarlyStopping(**self.args.early_stopping_args)
